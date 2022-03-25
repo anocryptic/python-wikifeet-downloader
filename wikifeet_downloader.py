@@ -4,6 +4,9 @@ import json
 import os
 import argparse
 import sys
+from inspect import getsourcefile
+from os.path import abspath
+from pathlib import Path
 
 # using this header to prevent the server from blocking our script, forbidding (403) our access to the website
 non_bot_header = {'User-Agent': 'Mozilla/5.0'}
@@ -80,58 +83,152 @@ if __name__=="__main__":
         # obtaining arguments from command line 
         parser = argparse.ArgumentParser()
 
-        parser.add_argument("url")
+        parser.add_argument("--url", nargs='*')
         parser.add_argument("--download_path")
 
         args = parser.parse_args()
-        url = args.url
+        
+        if len(sys.argv) != 1:
+            url = args.url
+            # get model name from the link ending
+            model_name = url.split('/')[-1]
 
-        # get model name from the link ending
-        model_name = url.split('/')[-1]
+            # if link looks like a wikifeet.com or wikifeetx.com one, proceed
+            if re.search(wikifeet_pattern, url) or re.search(wikifeetx_pattern, url):
+                r = requests.get(url, non_bot_header)
 
+                # checking if the link is actually valid, and if we can obtain (GET) the page
+                if r.status_code == 200:
+                    if (url + "\n") not in open(os.path.join(str(Path(args.download_path).parents[0]), "urls"), 'r').read():
+                        urlizt = open(os.path.join(str(Path(args.download_path).parents[0]), "urls"), 'a+') #adds the url to the bulk download list
+                        urlizt.write(url + "\n")
+                        urlizt.close()
 
-        # if link looks like a wikifeet.com or wikifeetx.com one, proceed
-        if re.search(wikifeet_pattern, url) or re.search(wikifeetx_pattern, url):
-            r = requests.get(url, non_bot_header)
+                    # begin extracting procedure on downloaded page
+                    json_extractor = JSONExtractor(r.text)
+                    extracted_json = json_extractor.get_json_dict()
 
-            # checking if the link is actually valid, and if we can obtain (GET) the page
-            if r.status_code == 200:
+                    pids = build_pid_list(extracted_json)
+                    link_builder = LinkBuilder(model_name)
 
-                # begin extracting procedure on downloaded page
-                json_extractor = JSONExtractor(r.text)
-                extracted_json = json_extractor.get_json_dict()
-
-                pids = build_pid_list(extracted_json)
-                link_builder = LinkBuilder(model_name)
-
-                # deciding where to put downloaded pictures
-                if args.download_path:
-                    if os.path.exists(args.download_path):
-                        download_path = args.download_path
+                    # deciding where to put downloaded pictures
+                    if args.download_path:
+                        if os.path.exists(args.download_path):
+                            download_path = args.download_path
+                        else:
+                            print("Path does not exist, it will be created")
+                            os.mkdir(args.download_path)
+                            print(args.download_path)
+                            download_path = args.download_path
                     else:
-                        print("Path does not exist, it will be created")
-                        os.mkdir(args.download_path)
-                        print(args.download_path)
-                        download_path = args.download_path
-                else:
-                    download_path = os.path.join(os.getcwd(), model_name)
-                    if not os.path.exists(download_path):
-                        os.mkdir(download_path)
-                
-                # now we're ready to go
-                jpgdownloader = JPGDownloader(download_path)
+                        download_path = os.path.join(os.getcwd(), model_name)
+                        if not os.path.exists(download_path):
+                            os.mkdir(download_path)
 
-                # download every picture by building the link with a pid first, 
-                # then feeding it to the JPGDownloader object "download_image" method;
-                # progress is expressed in % points
-                for index, pid in enumerate(pids):
-                    link = link_builder.build_link(pid)
-                    jpgdownloader.download_image(link)
-                    print("Progress: {:.1f}%".format(((index + 1) / len(pids))*100), end='\r')
+                    # now we're ready to go
+                    download_pid_path = os.path.join(download_path, model_name)                
+                    jpgdownloader = JPGDownloader(download_path)
+
+                    # download every picture by building the link with a pid first, 
+                    # then feeding it to the JPGDownloader object "download_image" method;
+                    # progress is expressed in % points
+                    for index, pid in enumerate(pids):
+                        link = link_builder.build_link(pid)
+                        if not os.path.isfile(download_pid_path):
+                            os.mknod(download_pid_path)
+                        if str(pid) + " " not in (open(download_pid_path).read()): # if already downloaded dont otherwise do
+                            dwnpid = open(download_pid_path, 'a')
+                            dwnpid.write(str(pid) + " \n")
+                            dwnpid.close()
+                            print(" " + str(pid) + " downloading ")
+                            print()
+                            jpgdownloader.download_image(link)
+                        else:
+                            print('\r' " " + str(pid) + " already in list ")
+                        print('\r' "Progress: {:.1f}%".format(((index + 1) / len(pids))*100), end='') # progress bar
+                else:
+                    print("Error: {}".format(r.status_code))
             else:
-                print("Error: {}".format(r.status_code))
+                print("Error: No wikifeet.com url detected")
         else:
-            print("Error: No wikifeet.com url detected")
+            print()
+            
+            
+            
+            
+            
+            
+            
+            
+            
+        if len(sys.argv) == 1:
+			#abspath(getsourcefile(lambda:0)) 
+            hmrw = Path(abspath(getsourcefile(lambda:0))).parents[0]
+            urlpath = os.path.join(hmrw , "urls")
+            
+            urlizt = open(urlpath, 'r')
+            ulrz = urlizt.readlines()
+            urlizt.close()
+        
+            for urlz in ulrz:
+                url = urlz.strip()
+                print()
+                print(url + " is next")
+                
+                model_name = url.split('/')[-1]
+                moddow = os.path.join(hmrw, model_name)
+                
+                if re.search(wikifeet_pattern, url) or re.search(wikifeetx_pattern, url):
+                    r = requests.get(url, non_bot_header)
+
+                # checking if the link is actually valid, and if we can obtain (GET) the page
+                    if r.status_code == 200:
+
+                        # begin extracting procedure on downloaded page
+                        json_extractor = JSONExtractor(r.text)
+                        extracted_json = json_extractor.get_json_dict()
+
+                        pids = build_pid_list(extracted_json)
+                        link_builder = LinkBuilder(model_name)
+
+                        # deciding where to put downloaded pictures
+                        if os.path.exists(moddow):
+                            download_path = moddow
+                        else:
+                            print("Path does not exist, it will be created")
+                            os.mkdir(moddow)
+                            print(moddow)
+                            download_path = moddow
+
+
+                        # now we're ready to go
+                        download_pid_path = os.path.join(download_path, model_name)                
+                        jpgdownloader = JPGDownloader(download_path)
+    
+                        # download every picture by building the link with a pid first, 
+                        # then feeding it to the JPGDownloader object "download_image" method;
+                        # progress is expressed in % points
+                        for index, pid in enumerate(pids):
+                            link = link_builder.build_link(pid)
+                            if not os.path.isfile(download_pid_path):
+                                os.mknod(download_pid_path)
+                            if (str(pid) + " " not in (open(download_pid_path).read())): # if already downloaded dont otherwise do
+                                jpgdownloader.download_image(link)
+                                dwnpid = open(download_pid_path, 'a+')
+                                dwnpid.write(str(pid) + " \n")
+                                dwnpid.close()
+                                print("  downloading PID " + str(pid) + " ")
+                                print()
+                            else:
+                                #print('\r' " " + str(pid) + " already in list ")
+                                print()
+                            print('\r' " Progress: {:.1f}%".format(((index + 1) / len(pids))*100), end='') # progress bar
+                    else:
+                        print("Error: {}".format(r.status_code))
+                else:
+                    print("Error: No wikifeet.com url detected")
+
+        
     except KeyboardInterrupt:
         print("\nKeyboard interrupt received, exiting.")
         sys.exit(0)
