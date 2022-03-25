@@ -6,8 +6,8 @@ Simply place the urls of the pages you wish to download one per line into a text
 
 
 
-## Terminal Input Usage (likely to have been broken during editting but kept for documenting reasons from the original)
-
+## Terminal Input Usage 
+(likely to have been broken during editting but kept for documenting reasons from the original)
 ```text
 wikifeet_downloader.py [-h] [--download_path DOWNLOAD_PATH] url
 ```
