@@ -4,6 +4,7 @@ import json
 import os
 import argparse
 import sys
+import shutil
 from inspect import getsourcefile
 from os.path import abspath
 from pathlib import Path
@@ -83,10 +84,18 @@ if __name__=="__main__":
         # obtaining arguments from command line 
         parser = argparse.ArgumentParser()
 
-        parser.add_argument("--url", nargs='*')
-        parser.add_argument("--download_path")
+        parser.add_argument("--url")
+        parser.add_argument("--download_path") #might remove. not needed with download manager setup the current way
 
         args = parser.parse_args()
+        
+        hmrw = Path(abspath(getsourcefile(lambda:0))).parents[0]
+        urlpath = os.path.join(hmrw , "urls")
+            
+        urlizt = open(urlpath, 'r')
+        ulrz = urlizt.readlines()
+        urlizt.close()
+
         
         if len(sys.argv) != 1:
             url = args.url
@@ -99,53 +108,13 @@ if __name__=="__main__":
 
                 # checking if the link is actually valid, and if we can obtain (GET) the page
                 if r.status_code == 200:
-                    if (url + "\n") not in open(os.path.join(str(Path(args.download_path).parents[0]), "urls"), 'r').read():
-                        urlizt = open(os.path.join(str(Path(args.download_path).parents[0]), "urls"), 'a+') #adds the url to the bulk download list
-                        urlizt.write(url + "\n")
-                        urlizt.close()
-
-                    # begin extracting procedure on downloaded page
-                    json_extractor = JSONExtractor(r.text)
-                    extracted_json = json_extractor.get_json_dict()
-
-                    pids = build_pid_list(extracted_json)
-                    link_builder = LinkBuilder(model_name)
-
-                    # deciding where to put downloaded pictures
-                    if args.download_path:
-                        if os.path.exists(args.download_path):
-                            download_path = args.download_path
-                        else:
-                            print("Path does not exist, it will be created")
-                            os.mkdir(args.download_path)
-                            print(args.download_path)
-                            download_path = args.download_path
+                    if (url + "\n") not in ulrz:
+                        urlizt1 = open(urlpath, 'a+') #adds the url to the bulk download list
+                        urlizt1.write(url + "\n")
+                        urlizt1.close()
+                        print("link added to list")
                     else:
-                        download_path = os.path.join(os.getcwd(), model_name)
-                        if not os.path.exists(download_path):
-                            os.mkdir(download_path)
-
-                    # now we're ready to go
-                    download_pid_path = os.path.join(download_path, model_name)                
-                    jpgdownloader = JPGDownloader(download_path)
-
-                    # download every picture by building the link with a pid first, 
-                    # then feeding it to the JPGDownloader object "download_image" method;
-                    # progress is expressed in % points
-                    for index, pid in enumerate(pids):
-                        link = link_builder.build_link(pid)
-                        if not os.path.isfile(download_pid_path):
-                            os.mknod(download_pid_path)
-                        if str(pid) + " " not in (open(download_pid_path).read()): # if already downloaded dont otherwise do
-                            dwnpid = open(download_pid_path, 'a')
-                            dwnpid.write(str(pid) + " \n")
-                            dwnpid.close()
-                            print(" " + str(pid) + " downloading ")
-                            print()
-                            jpgdownloader.download_image(link)
-                        else:
-                            print('\r' " " + str(pid) + " already in list ")
-                        print('\r' "Progress: {:.1f}%".format(((index + 1) / len(pids))*100), end='') # progress bar
+                        print("link already in list")
                 else:
                     print("Error: {}".format(r.status_code))
             else:
@@ -158,25 +127,19 @@ if __name__=="__main__":
             
             
             
-            
-            
-            
         if len(sys.argv) == 1:
 			#abspath(getsourcefile(lambda:0)) 
-            hmrw = Path(abspath(getsourcefile(lambda:0))).parents[0]
-            urlpath = os.path.join(hmrw , "urls")
-            
-            urlizt = open(urlpath, 'r')
-            ulrz = urlizt.readlines()
-            urlizt.close()
         
             for urlz in ulrz:
                 url = urlz.strip()
-                print()
-                print(url + " is next")
                 
                 model_name = url.split('/')[-1]
                 moddow = os.path.join(hmrw, model_name)
+                favsfold = os.path.join(moddow, "favs")
+                oldsfold = os.path.join(moddow, "old")
+
+
+                print('\n' "" +  model_name + " is next")
                 
                 if re.search(wikifeet_pattern, url) or re.search(wikifeetx_pattern, url):
                     r = requests.get(url, non_bot_header)
@@ -194,11 +157,27 @@ if __name__=="__main__":
                         # deciding where to put downloaded pictures
                         if os.path.exists(moddow):
                             download_path = moddow
+                            for filsss in os.listdir(moddow):
+                                if filsss.endswith(".jpg"):
+                                #if os.path.isfile(filsss):
+                                    if not os.path.exists(oldsfold):
+                                        os.mkdir(oldsfold)
+                                    if not os.path.exists(favsfold):
+                                        os.mkdir(favsfold )
+                                    filsrc = os.path.join(moddow, filsss)
+                                    fildest = os.path.join(oldsfold, filsss)
+                                    shutil.move(filsrc, fildest)
+                                    #print('Moved:', filsss)
+									
+                            
                         else:
                             print("Path does not exist, it will be created")
                             os.mkdir(moddow)
-                            print(moddow)
                             download_path = moddow
+                            print(moddow)
+
+                            os.mkdir(favsfold)
+                            os.mkdir(oldsfold)
 
 
                         # now we're ready to go
@@ -217,12 +196,17 @@ if __name__=="__main__":
                                 dwnpid = open(download_pid_path, 'a+')
                                 dwnpid.write(str(pid) + " \n")
                                 dwnpid.close()
-                                print("  downloading PID " + str(pid) + " ")
+                                wrotesmthing = 1 # flags for later printing
+                                #print("  downloading PID " + str(pid) + " ")
                                 print()
                             else:
                                 #print('\r' " " + str(pid) + " already in list ")
-                                print()
-                            print('\r' " Progress: {:.1f}%".format(((index + 1) / len(pids))*100), end='') # progress bar
+                                wrotesmthing = 0
+                                #print()
+                            if wrotesmthing == 1: # progress bar
+                                print('\r' " Progress: {:.1f}%".format(((index + 1) / len(pids))*100), model_name + " is downloading. currently picture " + str(pid) , end='') 
+                            else:
+                                print(" Progress: {:.1f}%".format(((index + 1) / len(pids))*100), end='\r')
                     else:
                         print("Error: {}".format(r.status_code))
                 else:
@@ -233,3 +217,13 @@ if __name__=="__main__":
         print("\nKeyboard interrupt received, exiting.")
         sys.exit(0)
     sys.exit(0)
+
+
+""" 
+useful examples during editting
+  abspath(getsourcefile(lambda:0)) #supposed to locate the current py file
+        
+if a special character is in the url such as with pokimanes then you have to find the text version like ' = %27
+
+
+""" #"""
