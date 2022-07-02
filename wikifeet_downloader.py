@@ -95,6 +95,8 @@ if __name__=="__main__":
         urlizt = open(urlpath, 'r')
         ulrz = urlizt.readlines()
         urlizt.close()
+        
+        nameolist = ""
 
         
         if len(sys.argv) != 1:
@@ -205,25 +207,42 @@ if __name__=="__main__":
                                 #print()
                             if wrotesmthing == 1: # progress bar
                                 print('\r' " Progress: {:.1f}%".format(((index + 1) / len(pids))*100), model_name + " is downloading. currently picture " + str(pid) , end='') 
+                                if (model_name) not in nameolist:
+                                    if nameolist != "":
+                                        nameolist = nameolist + ", " + model_name
+                                    else:
+                                        nameolist = model_name
+
                             else:
                                 print(" Progress: {:.1f}%".format(((index + 1) / len(pids))*100), end='\r')
                     else:
                         print("Error: {}".format(r.status_code))
                 else:
                     print("Error: No wikifeet.com url detected")
-
+        if nameolist != "":
+            nameolist = nameolist + " had downloads"
+            print(nameolist)
+        else:
+            print("no downloads performed")
+        
         
     except KeyboardInterrupt:
         print("\nKeyboard interrupt received, exiting.")
+        if nameolist != "":
+            nameolist = nameolist + " had downloads"
+            print(nameolist)
+        else:
+            print("no downloads performed")
         sys.exit(0)
+        
     sys.exit(0)
 
 
 """ 
 useful examples during editting
   abspath(getsourcefile(lambda:0)) #supposed to locate the current py file
-        
-if a special character is in the url such as with pokimanes then you have to find the text version like ' = %27
+
+  if a special character is in the url then you have to find the text version like ' = %27
 
 
 """ #"""
