@@ -9,6 +9,7 @@ the downloader will make a folder directory when run where it will download pict
 to quickly add a url to the end of the list when running the downloader run "python3 wikifeet_downloader.py --url link2add" where link2add is replaced with the link to the wikifeet page you wish to download. if the link is already added it will notify you
 
 ----trouble shooting----
+
 if a file downloads wrong and you need to redownload them - In the models folder delete the picture id from the txt file and it will redownload next run
 
 if a models page has a special character in the link it can be helpful to find the html character number codes such as on this page https://www.whatsmyip.org/html-characters/
