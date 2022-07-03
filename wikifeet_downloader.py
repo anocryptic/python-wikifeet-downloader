@@ -86,6 +86,7 @@ if __name__=="__main__":
 
         parser.add_argument("--url")
         parser.add_argument("--download_path") #might remove. not needed with download manager setup the current way
+        parser.add_argument("--mana")
 
         args = parser.parse_args()
         
@@ -101,31 +102,59 @@ if __name__=="__main__":
         
         if len(sys.argv) != 1:
             url = args.url
-            # get model name from the link ending
-            model_name = url.split('/')[-1]
+            mana = args.mana
+            
+            if url is not None:
+                # get model name from the link ending
+                model_name = url.split('/')[-1]
+                # if link looks like a wikifeet.com or wikifeetx.com one, proceed
+                if re.search(wikifeet_pattern, url) or re.search(wikifeetx_pattern, url):
+                    r = requests.get(url, non_bot_header)
 
-            # if link looks like a wikifeet.com or wikifeetx.com one, proceed
-            if re.search(wikifeet_pattern, url) or re.search(wikifeetx_pattern, url):
-                r = requests.get(url, non_bot_header)
-
-                # checking if the link is actually valid, and if we can obtain (GET) the page
-                if r.status_code == 200:
-                    if (url + "\n") not in ulrz:
-                        urlizt1 = open(urlpath, 'a+') #adds the url to the bulk download list
-                        urlizt1.write(url + "\n")
-                        urlizt1.close()
-                        print("link added to list")
+                    # checking if the link is actually valid, and if we can obtain (GET) the page
+                    if r.status_code == 200:
+                        if (url + "\n") not in ulrz:
+                            urlizt1 = open(urlpath, 'a+') #adds the url to the bulk download list
+                            urlizt1.write(url + "\n")
+                            urlizt1.close()
+                            print("link added to list")
+                        else:
+                            print("link already in list")
                     else:
-                        print("link already in list")
+                        print("Error: {}".format(r.status_code))
                 else:
-                    print("Error: {}".format(r.status_code))
-            else:
-                print("Error: No wikifeet.com url detected")
-        else:
-            print()
-            
-            
-            
+                    print("Error: No wikifeet.com url detected")
+            if mana is not None:
+                print('\n' + "current download list", end='\n' + '\n')
+                for urlnumber, urlz in enumerate(ulrz):
+                    url = urlz.strip()
+                    model_name = url.split('/')[-1]
+                    print(urlnumber, model_name)
+                print('\n' + "to delete a line type 'remove' folowed by the line number or to clear the url list type 'clear' or to continue without editting hit enter ") 
+                #user input
+                manainput = input("Enter option: ")
+                if "remove" in manainput:
+                    manainput = manainput.split(' ')[-1]
+                    print ("removing " + manainput)
+                    delmodels = open(urlpath, 'w')
+                    for urlnumber, urlzo in enumerate(ulrz):
+                         manainput = int(manainput)
+                         if urlnumber == manainput:
+                             print("deleting " + urlzo.split('/')[-1])
+                         else:
+                             delmodels.write(urlzo)
+                    delmodels.close()
+                else:
+                    if "clear" in manainput:
+                        delmodels = open(urlpath, 'w')
+                        for urlnumber, urlzo in enumerate(ulrz):
+                            delmodels.write("")
+                        delmodels.close()
+                        print("list cleared")
+
+
+        #else:
+        #    print()
             
             
             
@@ -219,20 +248,22 @@ if __name__=="__main__":
                         print("Error: {}".format(r.status_code))
                 else:
                     print("Error: No wikifeet.com url detected")
+        
+        
         if nameolist != "":
             nameolist = nameolist + " had downloads"
-            print(nameolist)
+            print("\n" + "\n" + nameolist)
         else:
-            print("no downloads performed")
+            print("\n" + "no downloads performed")
         
         
     except KeyboardInterrupt:
         print("\nKeyboard interrupt received, exiting.")
         if nameolist != "":
             nameolist = nameolist + " had downloads"
-            print(nameolist)
+            print("\n" + "\n" + nameolist)
         else:
-            print("no downloads performed")
+            print("\n" + "\n" + "no downloads performed")
         sys.exit(0)
         
     sys.exit(0)
