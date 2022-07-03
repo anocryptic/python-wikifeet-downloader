@@ -8,6 +8,8 @@ the downloader will make a folder directory when run where it will download pict
 
 to quickly add a url to the end of the list when running the downloader run "python3 wikifeet_downloader.py --url link2add" where link2add is replaced with the link to the wikifeet page you wish to download. if the link is already added it will notify you
 
+to access the mana menu run "python3 wikifeet_downloader.py --mana 1" then it will load up the menu showing the numbered list of the urls that will run and from this menu you can remove individual links or clear the entire list
+
 ----trouble shooting----
 
 if a file downloads wrong and you need to redownload them - In the models folder delete the picture id from the txt file and it will redownload next run
