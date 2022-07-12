@@ -2,13 +2,17 @@
 
 Simple tool to download all pictures from a model page on www.wikifeet.com or www.wikifeetx.com 
 
-Simply place the urls of the pages you wish to download one per line into a text file named "urls" in the folder with the script and it will download them in order. 
+Simply place the urls of the pages you wish to download one per line into a text file named "urls" in the folder with the script and it will download them in order or use the url input to put them in without touching the files. 
+
+----usage----
+to quickly add a url to the end of the list when running the downloader run "python3 wikifeet_downloader.py --url link2add" 
+where link2add is replaced with the link to the wikifeet page you wish to download. if the link is already added it will notify you
+
+to access the manager menu run "python3 wikifeet_downloader.py --mana 1" 
+it will load up the menu showing the numbered list of the urls that will run and from this menu you can rearrange or remove individual links as well as clear the entire list
 
 the downloader will make a folder directory when run where it will download pictures to. it will also move any files in the model folders into an old files folder for ease of use identifying which pictures are the newest downloads without needing to browse the actual download list output. the downloader will also create a favorites folder which the user can drop pictures into which wont be moved to the old folder on next run
 
-to quickly add a url to the end of the list when running the downloader run "python3 wikifeet_downloader.py --url link2add" where link2add is replaced with the link to the wikifeet page you wish to download. if the link is already added it will notify you
-
-to access the mana menu run "python3 wikifeet_downloader.py --mana 1" then it will load up the menu showing the numbered list of the urls that will run and from this menu you can remove individual links or clear the entire list
 
 ----trouble shooting----
 
