@@ -5,6 +5,7 @@ Simple tool to download all pictures from a model page on www.wikifeet.com or ww
 Simply place the urls of the pages you wish to download one per line into a text file named "urls" in the folder with the script and it will download them in order or use the url input to put them in without touching the files. 
 
 ----usage----
+
 to quickly add a url to the end of the list when running the downloader run "python3 wikifeet_downloader.py --url link2add" 
 where link2add is replaced with the link to the wikifeet page you wish to download. if the link is already added it will notify you
 
