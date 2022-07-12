@@ -89,16 +89,13 @@ if __name__=="__main__":
         parser.add_argument("--mana")
 
         args = parser.parse_args()
-        
         hmrw = Path(abspath(getsourcefile(lambda:0))).parents[0]
         urlpath = os.path.join(hmrw , "urls")
-            
+        nameolist = ""
+
         urlizt = open(urlpath, 'r')
         ulrz = urlizt.readlines()
         urlizt.close()
-        
-        nameolist = ""
-
         
         if len(sys.argv) != 1:
             url = args.url
@@ -107,10 +104,10 @@ if __name__=="__main__":
             if url is not None:
                 # get model name from the link ending
                 model_name = url.split('/')[-1]
+
                 # if link looks like a wikifeet.com or wikifeetx.com one, proceed
                 if re.search(wikifeet_pattern, url) or re.search(wikifeetx_pattern, url):
                     r = requests.get(url, non_bot_header)
-
                     # checking if the link is actually valid, and if we can obtain (GET) the page
                     if r.status_code == 200:
                         if (url + "\n") not in ulrz:
@@ -124,13 +121,17 @@ if __name__=="__main__":
                         print("Error: {}".format(r.status_code))
                 else:
                     print("Error: No wikifeet.com url detected")
+
             if mana is not None:
                 print('\n' + "current download list", end='\n' + '\n')
                 for urlnumber, urlz in enumerate(ulrz):
                     url = urlz.strip()
                     model_name = url.split('/')[-1]
                     print(urlnumber, model_name)
-                print('\n' + "to delete a line type 'remove' folowed by the line number or to clear the url list type 'clear' or to continue without editting hit enter ") 
+                print('\n' + "type 'arr num num2' to rearrange the order. num2 is where you want it to go") 
+                print("type 'remove' folowed by the line number to delete a line") 
+                print("type 'clear' to clear the url list") 
+                print("to continue without editting hit enter")
                 #user input
                 manainput = input("Enter option: ")
                 if "remove" in manainput:
@@ -148,9 +149,34 @@ if __name__=="__main__":
                     if "clear" in manainput:
                         delmodels = open(urlpath, 'w')
                         for urlnumber, urlzo in enumerate(ulrz):
+                            print(urlzo)
                             delmodels.write("")
                         delmodels.close()
                         print("list cleared")
+                    else:
+                        if "arr" in manainput:
+                            manainput2 = manainput.split(' ')[-1]
+                            manainput = manainput.split(' ')[-2]
+                            manainput2 = int(manainput2)
+                            manainput = int(manainput)
+                            rearrmodels = open(urlpath, 'w+')
+                            
+                            for urlnumber, urlzo in enumerate(ulrz):
+                                if urlnumber == manainput:
+                                    rearrflllg = urlzo
+                            for urlnumber, urlzo in enumerate(ulrz):
+                                if urlnumber == manainput2:
+                                    print ("moving to " + str(urlnumber) + '\n')
+                                    if manainput > manainput2:
+                                        rearrmodels.write(rearrflllg)
+                                        rearrmodels.write(urlzo)
+                                    else:
+                                        rearrmodels.write(urlzo)
+                                        rearrmodels.write(rearrflllg)
+                                else:
+                                    if urlnumber != manainput:
+                                        rearrmodels.write(urlzo)
+                            rearrmodels.close()
 
 
         #else:
@@ -168,9 +194,7 @@ if __name__=="__main__":
                 moddow = os.path.join(hmrw, model_name)
                 favsfold = os.path.join(moddow, "favs")
                 oldsfold = os.path.join(moddow, "old")
-
-
-                print('\n' "" +  model_name + " is next")
+                piktocnt = 0
                 
                 if re.search(wikifeet_pattern, url) or re.search(wikifeetx_pattern, url):
                     r = requests.get(url, non_bot_header)
@@ -190,7 +214,6 @@ if __name__=="__main__":
                             download_path = moddow
                             for filsss in os.listdir(moddow):
                                 if filsss.endswith(".jpg"):
-                                #if os.path.isfile(filsss):
                                     if not os.path.exists(oldsfold):
                                         os.mkdir(oldsfold)
                                     if not os.path.exists(favsfold):
@@ -228,22 +251,23 @@ if __name__=="__main__":
                                 dwnpid.write(str(pid) + " \n")
                                 dwnpid.close()
                                 wrotesmthing = 1 # flags for later printing
-                                #print("  downloading PID " + str(pid) + " ")
-                                print()
                             else:
-                                #print('\r' " " + str(pid) + " already in list ")
                                 wrotesmthing = 0
-                                #print()
                             if wrotesmthing == 1: # progress bar
-                                print('\r' " Progress: {:.1f}%".format(((index + 1) / len(pids))*100), model_name + " is downloading. currently picture " + str(pid) , end='') 
+                                print('\r', " Progress: {:.1f}%".format(((index + 1) / len(pids))*100) + " " + model_name + " is downloading. currently picture " + str(pid) , end='\r') 
+                                piktocnt = piktocnt + 1
                                 if (model_name) not in nameolist:
                                     if nameolist != "":
                                         nameolist = nameolist + ", " + model_name
                                     else:
                                         nameolist = model_name
-
                             else:
-                                print(" Progress: {:.1f}%".format(((index + 1) / len(pids))*100), end='\r')
+                                print('\r' + (" Progress: {:.1f}%".format(((index + 1) / len(pids))*100) + " " + model_name).ljust(80, ' ') , end='\r')
+
+                            if (index+1 == len(pids)):
+                                if (model_name) in nameolist:
+                                        nameolist = nameolist + " {" + str(piktocnt) + " pics}"
+
                     else:
                         print("Error: {}".format(r.status_code))
                 else:
@@ -251,16 +275,16 @@ if __name__=="__main__":
         
         
         if nameolist != "":
-            nameolist = nameolist + " had downloads"
-            print("\n" + "\n" + nameolist)
+            #nameolist = nameolist + " had downloads"
+            print(nameolist.ljust(80, ' '))
         else:
-            print("\n" + "no downloads performed")
+            print(("no downloads performed").ljust(80, ' '))
         
         
     except KeyboardInterrupt:
         print("\nKeyboard interrupt received, exiting.")
         if nameolist != "":
-            nameolist = nameolist + " had downloads"
+            nameolist = nameolist + " had downloads performed"
             print("\n" + "\n" + nameolist)
         else:
             print("\n" + "\n" + "no downloads performed")
